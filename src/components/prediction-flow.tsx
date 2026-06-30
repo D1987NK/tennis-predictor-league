@@ -71,6 +71,8 @@ export function PredictionFlow({ matches }: { matches: FlowMatch[] }) {
     const total = a + b;
     const need = setsToWin(match.bestOf);
     const winnerIsP1 = a === need;
+    // Auto-select the winner implied by the chosen score.
+    setWinner(winnerIsP1 ? match.player1 : match.player2);
     const next: { p1: number; p2: number }[] = [];
     for (let i = 0; i < total; i++) {
       // Default: predicted winner takes 6-4 sets, loser takes 4-6 sets.
