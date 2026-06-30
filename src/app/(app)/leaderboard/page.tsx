@@ -33,7 +33,7 @@ export default async function LeaderboardPage({
     })
   ).map((t) => t.tournament);
 
-  const rows = await getLeaderboard({
+  const { rows, totalMatches } = await getLeaderboard({
     dateKey: filter === "today" ? todayDate().toISOString().slice(0, 10) : undefined,
     tournament: tournament || undefined,
   });
@@ -75,13 +75,20 @@ export default async function LeaderboardPage({
         ))}
       </div>
 
+      {totalMatches > 0 && (
+        <p className="text-sm text-muted-foreground">
+          {totalMatches} match{totalMatches === 1 ? "" : "es"} available to predict in this view.
+        </p>
+      )}
+
       <Card>
         <CardContent className="p-0">
           {/* Header row */}
-          <div className="hidden grid-cols-[3rem_1fr_repeat(5,5rem)] gap-2 border-b px-4 py-3 text-xs font-semibold text-muted-foreground md:grid">
+          <div className="hidden grid-cols-[3rem_1fr_repeat(6,5rem)] gap-2 border-b px-4 py-3 text-xs font-semibold text-muted-foreground md:grid">
             <span>Rank</span>
             <span>Player</span>
             <span className="text-center">Points</span>
+            <span className="text-center">Predicted</span>
             <span className="text-center">Winners</span>
             <span className="text-center">Scores</span>
             <span className="text-center">Sets</span>
@@ -98,7 +105,7 @@ export default async function LeaderboardPage({
               <div
                 key={r.userId}
                 className={cn(
-                  "grid grid-cols-2 items-center gap-2 border-b px-4 py-3 text-sm last:border-0 md:grid-cols-[3rem_1fr_repeat(5,5rem)]",
+                  "grid grid-cols-2 items-center gap-2 border-b px-4 py-3 text-sm last:border-0 md:grid-cols-[3rem_1fr_repeat(6,5rem)]",
                   isMe && "bg-primary/5",
                 )}
               >
@@ -109,8 +116,26 @@ export default async function LeaderboardPage({
                   <span className={cn("font-medium", isMe && "text-primary")}>{r.username}</span>
                   {isMe && <Badge variant="outline" className="ml-2 text-[10px]">You</Badge>}
                   <span className="block text-xs text-muted-foreground">{r.name}</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground md:hidden">
+                    Predicted {r.predictedCount}/{totalMatches}
+                  </span>
                 </span>
                 <span className="text-right font-bold md:text-center">{r.totalPoints}</span>
+                <span
+                  className={cn(
+                    "hidden text-center md:block",
+                    totalMatches > 0 && r.predictedCount < totalMatches
+                      ? "font-medium text-amber-500"
+                      : "text-muted-foreground",
+                  )}
+                  title={
+                    totalMatches > 0 && r.predictedCount < totalMatches
+                      ? "Did not predict every match in this view"
+                      : undefined
+                  }
+                >
+                  {r.predictedCount}/{totalMatches}
+                </span>
                 <span className="hidden text-center text-muted-foreground md:block">{r.winnersCorrect}</span>
                 <span className="hidden text-center text-muted-foreground md:block">{r.scoresCorrect}</span>
                 <span className="hidden text-center text-muted-foreground md:block">{r.setsCorrect}</span>

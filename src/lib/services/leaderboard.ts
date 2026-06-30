@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -51,40 +52,59 @@ export interface LeaderboardRow {
   winnersCorrect: number;
   scoresCorrect: number;
   setsCorrect: number;
-  matchesPredicted: number;
+  matchesPredicted: number; // scored (finished) predictions — used for accuracy
+  predictedCount: number; // predictions submitted for ANY match in scope, finished or not
   accuracy: number; // % of predicted matches where winner was correct
+}
+
+export interface LeaderboardResult {
+  rows: LeaderboardRow[];
+  totalMatches: number; // matches available to predict in this scope (published/locked/finished)
 }
 
 /** Build the full leaderboard with aggregate stats, optionally filtered. */
 export async function getLeaderboard(filter?: {
   tournament?: string;
   dateKey?: string; // YYYY-MM-DD (today filter)
-}): Promise<LeaderboardRow[]> {
-  const matchWhere: Record<string, unknown> = { status: "FINISHED" };
-  if (filter?.tournament) matchWhere.tournament = filter.tournament;
+}): Promise<LeaderboardResult> {
+  const baseWhere: Prisma.MatchWhereInput = {};
+  if (filter?.tournament) baseWhere.tournament = filter.tournament;
   if (filter?.dateKey) {
-    const start = new Date(filter.dateKey + "T00:00:00.000Z");
-    matchWhere.matchDate = start;
+    baseWhere.matchDate = new Date(filter.dateKey + "T00:00:00.000Z");
   }
 
-  const users = await prisma.user.findMany({
-    where: { role: "USER" },
-    select: {
-      id: true,
-      username: true,
-      firstName: true,
-      lastName: true,
-      predictions: {
-        where: { match: matchWhere },
-        select: {
-          pointsAwarded: true,
-          winnerCorrect: true,
-          scoreCorrect: true,
-          setsCorrect: true,
+  // Matches that were ever predictable in this scope (excludes still-pending/unpublished).
+  const visibleMatchWhere: Prisma.MatchWhereInput = {
+    ...baseWhere,
+    status: { in: ["PUBLISHED", "LOCKED", "FINISHED"] },
+  };
+  // Matches that have actually been scored — used for points & accuracy.
+  const finishedMatchWhere: Prisma.MatchWhereInput = { ...baseWhere, status: "FINISHED" };
+
+  const [totalMatches, users] = await Promise.all([
+    prisma.match.count({ where: visibleMatchWhere }),
+    prisma.user.findMany({
+      where: { role: "USER" },
+      select: {
+        id: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        predictions: {
+          where: { match: finishedMatchWhere },
+          select: {
+            pointsAwarded: true,
+            winnerCorrect: true,
+            scoreCorrect: true,
+            setsCorrect: true,
+          },
+        },
+        _count: {
+          select: { predictions: { where: { match: visibleMatchWhere } } },
         },
       },
-    },
-  });
+    }),
+  ]);
 
   const rows: LeaderboardRow[] = users.map((u) => {
     const scored = u.predictions.filter((p) => p.pointsAwarded !== null);
@@ -103,6 +123,7 @@ export async function getLeaderboard(filter?: {
       scoresCorrect: scores,
       setsCorrect: sets,
       matchesPredicted: predicted,
+      predictedCount: u._count.predictions,
       accuracy: predicted ? Math.round((winners / predicted) * 100) : 0,
     };
   });
@@ -119,5 +140,5 @@ export async function getLeaderboard(filter?: {
     r.rank = rank;
   });
 
-  return rows;
+  return { rows, totalMatches };
 }
