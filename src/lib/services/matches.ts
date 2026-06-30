@@ -59,3 +59,11 @@ export async function lockDueMatches(now: Date = new Date()): Promise<number> {
   });
   return res.count;
 }
+
+/** Matches that have been published/started but have no result yet. */
+export async function getMatchesAwaitingResults() {
+  return prisma.match.findMany({
+    where: { status: { in: ["PUBLISHED", "LOCKED"] } },
+    orderBy: { startsAt: "asc" },
+  });
+}

@@ -6,6 +6,7 @@ const tabs = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/matches", label: "Matches" },
   { href: "/admin/results", label: "Results" },
+  { href: "/admin/results/manual", label: "Manual Entry" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/settings", label: "Settings" },
   { href: "/admin/audit", label: "Audit & Imports" },
