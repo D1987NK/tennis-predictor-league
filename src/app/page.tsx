@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/tour-badge";
+import { Logo, BrandTagline } from "@/components/tour-badge";
 import { Trophy, Target, BarChart3, Zap } from "lucide-react";
 
 export default async function Home() {
@@ -18,8 +18,11 @@ export default async function Home() {
 
   return (
     <main className="court-gradient min-h-screen">
-      <header className="container flex items-center justify-between py-6">
-        <Logo className="text-xl" />
+      <header className="container flex flex-wrap items-center justify-between gap-3 py-6">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <Logo className="text-xl" />
+          <BrandTagline className="text-[11px] sm:text-xs" />
+        </div>
         <div className="flex gap-2">
           <Button asChild variant="ghost">
             <Link href="/login">Login</Link>

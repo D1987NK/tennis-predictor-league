@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { AppNav } from "@/components/app-nav";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Logo } from "@/components/tour-badge";
+import { Logo, BrandTagline } from "@/components/tour-badge";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -22,9 +22,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       />
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile top bar (in the content column so it spans full width) */}
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-card/95 px-4 py-3 pt-safe backdrop-blur md:hidden">
-          <Logo className="text-lg" />
-          <div className="flex items-center gap-1">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b bg-card/95 px-4 py-2 pt-safe backdrop-blur md:hidden">
+          <div className="flex min-w-0 flex-col">
+            <Logo className="text-lg" />
+            <BrandTagline className="mt-0.5 max-w-[62vw] truncate text-[10px] leading-tight" />
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
             <NotificationBell count={unread} />
             <ThemeToggle />
           </div>

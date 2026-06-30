@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Logo } from "@/components/tour-badge";
+import { Logo, BrandTagline } from "@/components/tour-badge";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -65,9 +65,12 @@ export function AppNav({
     <>
       {/* ---------- Desktop sidebar ---------- */}
       <aside className="hidden w-64 shrink-0 flex-col border-r bg-card p-4 md:flex">
-        <Link href="/dashboard" className="px-3 py-2">
-          <Logo className="text-xl" />
-        </Link>
+        <div className="px-3 py-2">
+          <Link href="/dashboard">
+            <Logo className="text-xl" />
+          </Link>
+          <BrandTagline className="mt-2 text-[11px] leading-snug" />
+        </div>
         <nav className="my-4 flex flex-1 flex-col gap-1">
           {desktopLinks.map((l) => (
             <Link
