@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode */
+    --background: 150 30% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 142 71% 38%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 150 16% 93%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 150 16% 93%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 150 16% 90%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 142 71% 38%;
+    --radius: 0.85rem;
+
+    --atp: 214 90% 52%;
+    --atp-foreground: 0 0% 100%;
+    --wta: 270 70% 60%;
+    --wta-foreground: 0 0% 100%;
+    --court: 142 71% 38%;
+    --court-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    /* Dark mode (default) — deep court-night palette */
+    --background: 222 47% 7%;
+    --foreground: 210 40% 96%;
+    --card: 222 40% 11%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 40% 11%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 142 64% 45%;
+    --primary-foreground: 222 47% 7%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 217 33% 16%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 20%;
+    --accent-foreground: 210 40% 96%;
+    --destructive: 0 63% 45%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 20%;
+    --input: 217 33% 22%;
+    --ring: 142 64% 45%;
+
+    --atp: 213 94% 60%;
+    --atp-foreground: 0 0% 100%;
+    --wta: 270 76% 68%;
+    --wta-foreground: 0 0% 100%;
+    --court: 142 64% 45%;
+    --court-foreground: 222 47% 7%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    /* Avoid grey tap flash & accidental text selection on touch UIs. */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: none;
+  }
+  /* Inputs at >=16px prevent iOS Safari from auto-zooming on focus. */
+  @media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+}
+
+@layer utilities {
+  .skeleton {
+    @apply animate-pulse rounded-md bg-muted;
+  }
+  /* Safe-area helpers for notched phones (viewport-fit=cover). */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .h-bottom-nav {
+    /* nav bar height + bottom inset */
+    height: calc(4rem + env(safe-area-inset-bottom));
+  }
+  .pb-bottom-nav {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+  .tap {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .court-gradient {
+    background-image: radial-gradient(
+        1200px 500px at 50% -10%,
+        hsl(var(--court) / 0.16),
+        transparent 60%
+      ),
+      linear-gradient(to bottom, hsl(var(--background)), hsl(var(--background)));
+  }
+}

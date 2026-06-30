@@ -1,0 +1,162 @@
+// Tennis Predictor League — Prisma schema
+// Target: PostgreSQL (see docker-compose.yml / DATABASE_URL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // Runtime connection. In production use Supabase's Transaction pooler (port 6543, ?pgbouncer=true).
+  url       = env("DATABASE_URL")
+  // Used for migrations (prisma migrate). In production use Supabase's Session pooler (port 5432).
+  // Falls back to DATABASE_URL locally where a single connection is fine.
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Tour {
+  ATP
+  WTA
+}
+
+enum MatchStatus {
+  UPCOMING // imported, not yet published
+  PUBLISHED // visible to users, predictions open
+  LOCKED // match time passed, predictions closed
+  FINISHED // result imported & scored
+}
+
+model User {
+  id           String   @id @default(cuid())
+  firstName    String
+  lastName     String
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  totalPoints  Int      @default(0)
+  rank         Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  predictions   Prediction[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  imports       ImportBatch[]
+
+  @@index([totalPoints])
+}
+
+model Match {
+  id           String      @id @default(cuid())
+  tournament   String
+  draw         String // raw draw string from CSV, e.g. "ATP Singles" / "Men's Singles"
+  tour         Tour
+  round        String?
+  bestOf       Int         @default(3) // 3 or 5; auto-derived on import
+  matchDate    DateTime    @db.Date
+  timeBst      String? // "13:30"
+  timeAest     String? // "22:30"
+  startsAt     DateTime // resolved UTC instant used for locking predictions
+  player1      String
+  player2      String
+  status       MatchStatus @default(UPCOMING)
+  winner       String?
+  finalScore   String? // e.g. "3-1"
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  importBatchId String?
+  importBatch   ImportBatch? @relation(fields: [importBatchId], references: [id])
+
+  sets        MatchSet[]
+  predictions Prediction[]
+
+  // A scheduled match is unique by tournament + date + the two players
+  @@unique([tournament, matchDate, player1, player2], name: "match_identity")
+  @@index([matchDate, status])
+  @@index([tour])
+}
+
+model MatchSet {
+  id           String @id @default(cuid())
+  matchId      String
+  match        Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  setNumber    Int
+  player1Games Int
+  player2Games Int
+
+  @@unique([matchId, setNumber])
+}
+
+model Prediction {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matchId        String
+  match          Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  predictedWinner String
+  predictedScore  String // e.g. "3-1"
+  // Predicted set games, stored as JSON: [{ "p1": 6, "p2": 4 }, ...]
+  predictedSets   Json
+  pointsAwarded   Int?
+  winnerCorrect   Boolean  @default(false)
+  scoreCorrect    Boolean  @default(false)
+  setsCorrect     Int      @default(0)
+  scoredAt        DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, matchId])
+  @@index([matchId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  // Optional structured payload (points breakdown, new rank, etc.)
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}
+
+enum ImportType {
+  MATCHES
+  RESULTS
+}
+
+model ImportBatch {
+  id           String     @id @default(cuid())
+  type         ImportType
+  fileName     String?
+  uploadedById String?
+  uploadedBy   User?      @relation(fields: [uploadedById], references: [id])
+  rowsTotal    Int        @default(0)
+  rowsValid    Int        @default(0)
+  rowsInvalid  Int        @default(0)
+  summary      Json? // structured summary returned to the admin
+  createdAt    DateTime   @default(now())
+
+  matches Match[]
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String // e.g. "IMPORT_MATCHES", "PUBLISH_MATCHES", "IMPORT_RESULTS", "RESET_COMPETITION"
+  detail    Json?
+  createdAt DateTime @default(now())
+
+  @@index([action, createdAt])
+}
