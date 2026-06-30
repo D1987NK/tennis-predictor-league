@@ -19,6 +19,15 @@ enum Role {
   ADMIN
 }
 
+// Singleton (id = 1) holding admin-editable competition settings.
+model AppSetting {
+  id                      Int      @id @default(1)
+  // Daily prediction cut-off, in Australian Eastern time (AEST, UTC+10).
+  predictionCutoffEnabled Boolean  @default(true)
+  predictionCutoffTime    String   @default("19:00") // "HH:MM" 24h
+  updatedAt               DateTime @updatedAt
+}
+
 enum Tour {
   ATP
   WTA

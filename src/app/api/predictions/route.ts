@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { predictionSchema } from "@/lib/validations";
 import { canPredict } from "@/lib/services/matches";
+import { getCutoff, formatCutoff12h } from "@/lib/services/settings";
 import { parseScore, setsToWin } from "@/lib/tennis";
 
 export async function POST(req: Request) {
@@ -26,9 +27,13 @@ export async function POST(req: Request) {
   const match = await prisma.match.findUnique({ where: { id: matchId } });
   if (!match) return NextResponse.json({ error: "Match not found" }, { status: 404 });
 
-  if (!canPredict(match.status, match.startsAt)) {
+  const cutoff = await getCutoff();
+  if (!canPredict(match.status, match.startsAt, match.matchDate, cutoff)) {
+    const reason = cutoff.enabled
+      ? `they lock at ${formatCutoff12h(cutoff.time)} AEST, or when the match starts`
+      : "the match has started";
     return NextResponse.json(
-      { error: "Predictions are closed for this match." },
+      { error: `Predictions are closed (${reason}).` },
       { status: 409 },
     );
   }
