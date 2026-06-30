@@ -59,11 +59,12 @@ function LoginForm() {
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Username or email</Label>
               <Input
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                placeholder="yourname or you@example.com"
                 autoComplete="username"
                 required
               />
