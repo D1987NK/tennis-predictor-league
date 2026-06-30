@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TourBadge } from "@/components/tour-badge";
 import { useToast } from "@/components/ui/toast";
-import { Trash2, Pencil, Check, X, UploadCloud } from "lucide-react";
+import { Trash2, Pencil, Check, X, UploadCloud, PlusCircle } from "lucide-react";
 
 interface PendingMatch {
   id: string;
@@ -117,6 +117,122 @@ export function MatchImportForm({ defaultDate }: { defaultDate: string }) {
             )}
           </div>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+const emptyManualMatch = {
+  tournament: "",
+  draw: "",
+  timeBst: "",
+  timeAest: "",
+  player1: "",
+  player2: "",
+};
+
+export function ManualMatchForm({ defaultDate }: { defaultDate: string }) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [date, setDate] = useState(defaultDate);
+  const [form, setForm] = useState(emptyManualMatch);
+  const [busy, setBusy] = useState(false);
+
+  function update<K extends keyof typeof emptyManualMatch>(key: K, value: string) {
+    setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const res = await fetch("/api/admin/matches/manual", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date, ...form, status: "Upcoming" }),
+    });
+    const data = await res.json();
+    setBusy(false);
+    if (!res.ok) {
+      toast({ variant: "error", title: "Could not add match", description: data.error });
+      return;
+    }
+    toast({
+      variant: "success",
+      title: "Match added",
+      description: `${form.player1} vs ${form.player2} added to pending matches.`,
+    });
+    setForm(emptyManualMatch);
+    router.refresh();
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Add a match manually</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label htmlFor="m-date">Match date</Label>
+            <Input id="m-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="m-tournament">Tournament</Label>
+            <Input
+              id="m-tournament"
+              value={form.tournament}
+              onChange={(e) => update("tournament", e.target.value)}
+              placeholder="Wimbledon"
+              required
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="m-draw">Draw</Label>
+            <Input
+              id="m-draw"
+              value={form.draw}
+              onChange={(e) => update("draw", e.target.value)}
+              placeholder="ATP Men's Singles / WTA Women's Singles"
+              required
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="m-timebst">Time (BST)</Label>
+            <Input
+              id="m-timebst"
+              value={form.timeBst}
+              onChange={(e) => update("timeBst", e.target.value)}
+              placeholder="13:30"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="m-player1">Player 1</Label>
+            <Input
+              id="m-player1"
+              value={form.player1}
+              onChange={(e) => update("player1", e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="m-player2">Player 2</Label>
+            <Input
+              id="m-player2"
+              value={form.player2}
+              onChange={(e) => update("player2", e.target.value)}
+              required
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Button type="submit" disabled={busy}>
+              <PlusCircle className="size-4" /> {busy ? "Adding…" : "Add match"}
+            </Button>
+          </div>
+        </form>
+        <p className="mt-2 text-xs text-muted-foreground">
+          ATP/WTA and best-of are detected automatically from the draw, same as a CSV import.
+          The match is added as <b>pending</b> — publish it below to open predictions.
+        </p>
       </CardContent>
     </Card>
   );

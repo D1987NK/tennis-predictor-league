@@ -3,8 +3,10 @@ import { todayDate } from "@/lib/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TourBadge } from "@/components/tour-badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   MatchImportForm,
+  ManualMatchForm,
   PublishAllButton,
   PendingMatchRow,
 } from "@/components/admin/match-admin";
@@ -29,7 +31,18 @@ export default async function AdminMatchesPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <MatchImportForm defaultDate={todayKey} />
+      <Tabs defaultValue="csv">
+        <TabsList>
+          <TabsTrigger value="csv">CSV Upload</TabsTrigger>
+          <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+        </TabsList>
+        <TabsContent value="csv">
+          <MatchImportForm defaultDate={todayKey} />
+        </TabsContent>
+        <TabsContent value="manual">
+          <ManualMatchForm defaultDate={todayKey} />
+        </TabsContent>
+      </Tabs>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
