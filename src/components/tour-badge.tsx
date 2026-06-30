@@ -14,9 +14,9 @@ export function Logo({ className }: { className?: string }) {
     <span className={cn("inline-flex items-center gap-1.5", className)}>
       <span className="font-extrabold tracking-tight">Tennis</span>
       <span className="font-extrabold tracking-tight text-primary">Predictor</span>
-      {/* Card logo — drop the picture at public/logo.png. Whole image, scales with font size. */}
+      {/* Card logo hosted on Vercel Blob (public). Whole image, scales with font size. */}
       <img
-        src="/logo.png"
+        src="https://c4cizlb2akfcloys.public.blob.vercel-storage.com/Logo.png"
         alt="Tennis Predictor"
         className="ml-1 inline-block h-[2.2em] w-auto max-w-none shrink-0 object-contain align-middle"
       />
