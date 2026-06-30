@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import type { ParsedResult } from "@/lib/csv";
-import { parseFlexibleDate } from "@/lib/timezone";
 import { scorePrediction, type SetGames } from "@/lib/scoring";
 import { recomputeLeaderboard } from "./leaderboard";
 
@@ -12,32 +11,84 @@ export interface ResultsImportSummary {
   unmatched: { tournament: string; player1: string; player2: string; reason: string }[];
 }
 
-function nameEq(a: string, b: string) {
-  return a.trim().toLowerCase() === b.trim().toLowerCase();
+// Minimum name similarity (0..1) required to consider two player names "the same".
+const NAME_MATCH_THRESHOLD = 0.9; // 90%
+
+/**
+ * Normalise a player name for comparison: lowercase, strip accents, remove
+ * seed/qualifier tags like "[1]", "[Q]", "[WC]", and collapse punctuation.
+ * e.g. "[1] Félix Auger-Aliassime" -> "felix auger aliassime"
+ */
+function normalizeName(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // strip accents
+    .replace(/\[[^\]]*\]/g, " ") // remove [1], [Q], [WC] etc.
+    .replace(/[^a-z0-9]+/g, " ") // punctuation/hyphens -> space
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function levenshtein(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  const prev = new Array(n + 1);
+  const curr = new Array(n + 1);
+  for (let j = 0; j <= n; j++) prev[j] = j;
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+    }
+    for (let j = 0; j <= n; j++) prev[j] = curr[j];
+  }
+  return prev[n];
+}
+
+/** Similarity ratio (0..1) between two player names after normalisation. */
+function nameSimilarity(a: string, b: string): number {
+  const na = normalizeName(a);
+  const nb = normalizeName(b);
+  if (!na && !nb) return 1;
+  if (!na || !nb) return 0;
+  if (na === nb) return 1;
+  const dist = levenshtein(na, nb);
+  return 1 - dist / Math.max(na.length, nb.length);
 }
 
 /**
- * Find the scheduled match a result row refers to. Matches on tournament-ish +
- * the two players (order-insensitive), optionally constrained by date. The
- * tournament comparison is loose because results CSVs sometimes prefix the tour
- * (e.g. "ATP Wimbledon" vs scheduled "Wimbledon").
+ * Find the scheduled match a result row refers to — matched ONLY on the two
+ * player names, fuzzily (>= 90% similarity), order-insensitive. Tournament and
+ * date are ignored. Returns the best-scoring match above the threshold.
  */
 async function findMatch(row: ParsedResult) {
-  const date = row.date ? parseFlexibleDate(row.date) : null;
-  const candidates = await prisma.match.findMany({
-    where: date ? { matchDate: date } : {},
-  });
+  const candidates = await prisma.match.findMany();
 
-  const tourNorm = row.tournament.toLowerCase().replace(/\b(atp|wta)\b/g, "").trim();
+  let best: (typeof candidates)[number] | undefined;
+  let bestScore = 0;
 
-  return candidates.find((m) => {
-    const mt = m.tournament.toLowerCase().replace(/\b(atp|wta)\b/g, "").trim();
-    const tournamentOk = mt === tourNorm || mt.includes(tourNorm) || tourNorm.includes(mt);
-    if (!tournamentOk) return false;
-    const direct = nameEq(m.player1, row.player1) && nameEq(m.player2, row.player2);
-    const swapped = nameEq(m.player1, row.player2) && nameEq(m.player2, row.player1);
-    return direct || swapped;
-  });
+  for (const m of candidates) {
+    // Both players must clear the threshold — score each orientation by its
+    // weaker player, then take the better orientation.
+    const direct = Math.min(
+      nameSimilarity(m.player1, row.player1),
+      nameSimilarity(m.player2, row.player2),
+    );
+    const swapped = Math.min(
+      nameSimilarity(m.player1, row.player2),
+      nameSimilarity(m.player2, row.player1),
+    );
+    const score = Math.max(direct, swapped);
+    if (score >= NAME_MATCH_THRESHOLD && score > bestScore) {
+      bestScore = score;
+      best = m;
+    }
+  }
+  return best;
 }
 
 /**
@@ -73,13 +124,16 @@ export async function applyResults(
         tournament: row.tournament,
         player1: row.player1,
         player2: row.player2,
-        reason: "No matching scheduled match found.",
+        reason: "No scheduled match with ≥90% matching player names.",
       });
       continue;
     }
 
-    // Canonicalise winner to the scheduled player's exact spelling.
-    const winner = nameEq(match.player1, row.winner) ? match.player1 : match.player2;
+    // Canonicalise winner to the scheduled player's spelling (closest match).
+    const winner =
+      nameSimilarity(match.player1, row.winner) >= nameSimilarity(match.player2, row.winner)
+        ? match.player1
+        : match.player2;
     const sets: SetGames[] = row.sets;
 
     await prisma.$transaction(async (tx) => {
