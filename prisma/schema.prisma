@@ -25,6 +25,8 @@ model AppSetting {
   // Daily prediction cut-off, in Australian Eastern time (AEST, UTC+10).
   predictionCutoffEnabled Boolean  @default(true)
   predictionCutoffTime    String   @default("19:00") // "HH:MM" 24h
+  // Bumped each time results are imported; drives the "results updated" splash.
+  resultsUpdatedAt        DateTime?
   updatedAt               DateTime @updatedAt
 }
 

@@ -1,18 +1,27 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getResultsVersion } from "@/lib/services/settings";
 import { AppNav } from "@/components/app-nav";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ResultsUpdateSplash } from "@/components/results-update-splash";
 import { Logo, BrandTagline } from "@/components/tour-badge";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const unread = await prisma.notification.count({
-    where: { userId: session.user.id, read: false },
-  });
+  const [unread, resultsVersion] = await Promise.all([
+    prisma.notification.count({ where: { userId: session.user.id, read: false } }),
+    getResultsVersion(),
+  ]);
+
+  // Show the one-time "results updated" splash when there's a newer results
+  // version than this device has acknowledged.
+  const seenResults = cookies().get("tpl_results_seen")?.value;
+  const showResultsSplash = !!resultsVersion && seenResults !== resultsVersion;
 
   return (
     <div className="flex min-h-screen">
@@ -40,6 +49,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {/* pb-bottom-nav keeps content clear of the fixed mobile tab bar */}
         <main className="flex-1 p-4 pb-bottom-nav md:p-8 md:pb-8">{children}</main>
       </div>
+      {showResultsSplash && <ResultsUpdateSplash version={resultsVersion!} />}
     </div>
   );
 }

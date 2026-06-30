@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { ParsedResult } from "@/lib/csv";
 import { scorePrediction, type SetGames } from "@/lib/scoring";
 import { recomputeLeaderboard } from "./leaderboard";
+import { markResultsUpdated } from "./settings";
 
 export interface ResultsImportSummary {
   matchesUpdated: number;
@@ -185,6 +186,9 @@ export async function applyResults(
 
   // Recompute leaderboard / ranks from scratch (authoritative).
   await recomputeLeaderboard();
+
+  // Stamp a new results version so users get the one-time "results updated" splash.
+  if (summary.matchesUpdated > 0) await markResultsUpdated();
 
   // Notifications with points + new rank.
   for (const [userId, points] of userBatchPoints.entries()) {

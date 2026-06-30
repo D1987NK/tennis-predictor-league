@@ -43,6 +43,22 @@ export async function getCutoff(): Promise<CutoffConfig> {
   };
 }
 
+/** Stamp a new "results updated" version (epoch ms) — drives the one-time splash. */
+export async function markResultsUpdated() {
+  const now = new Date();
+  await prisma.appSetting.upsert({
+    where: { id: SETTING_ID },
+    create: { id: SETTING_ID, resultsUpdatedAt: now },
+    update: { resultsUpdatedAt: now },
+  });
+}
+
+/** Current results version (epoch-ms string), or null if results never imported. */
+export async function getResultsVersion(): Promise<string | null> {
+  const s = await getAppSetting();
+  return s.resultsUpdatedAt ? String(s.resultsUpdatedAt.getTime()) : null;
+}
+
 export async function updateCutoff(enabled: boolean, time: string) {
   const safeTime = /^(\d{1,2}):(\d{2})$/.test(time.trim()) ? time.trim() : "19:00";
   return prisma.appSetting.upsert({
