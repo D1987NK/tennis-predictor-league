@@ -10,6 +10,7 @@ import {
   Trophy,
   History,
   User,
+  BarChart3,
   Shield,
   LogOut,
   MoreHorizontal,
@@ -29,6 +30,7 @@ const primaryLinks = [
 ];
 
 const secondaryLinks = [
+  { href: "/analysis", label: "Analysis", icon: BarChart3 },
   { href: "/history", label: "History", icon: History },
   { href: "/profile", label: "Profile", icon: User },
 ];
