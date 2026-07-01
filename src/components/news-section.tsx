@@ -30,7 +30,7 @@ export async function NewsSection() {
             <Newspaper className="size-5" /> Tennis News
           </CardTitle>
           <CardDescription dir="rtl" lang="fa" className="mt-1">
-            این اخبار تنیس با هر روز آپدیت میشه و پنج خبر مهم تنیس دیروز رو نشون میده
+            این اخبار تنیس هر روز آپدیت میشه و پنج خبر مهم تنیس دیروز رو نشون میده
           </CardDescription>
         </div>
         {news && (
