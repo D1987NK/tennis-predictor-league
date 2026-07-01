@@ -3,6 +3,7 @@ import type { ParsedResult } from "@/lib/csv";
 import { scorePrediction, type SetGames } from "@/lib/scoring";
 import { recomputeLeaderboard } from "./leaderboard";
 import { markResultsUpdated } from "./settings";
+import { resolveDuelsForMatch } from "./duels";
 
 export interface ResultsImportSummary {
   matchesUpdated: number;
@@ -183,6 +184,9 @@ export async function applyResults(
 
     summary.matchesUpdated++;
     scoredMatchIds.push(match.id);
+
+    // Resolve any duels riding on this match now that predictions are scored.
+    await resolveDuelsForMatch(match.id);
   }
 
   // Recompute leaderboard / ranks from scratch (authoritative).

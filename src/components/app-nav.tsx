@@ -15,6 +15,7 @@ import {
   LogOut,
   MoreHorizontal,
   X,
+  Swords,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ const primaryLinks = [
 ];
 
 const secondaryLinks = [
+  { href: "/duels", label: "Duels", icon: Swords },
   { href: "/analysis", label: "Analysis", icon: BarChart3 },
   { href: "/history", label: "History", icon: History },
   { href: "/profile", label: "Profile", icon: User },

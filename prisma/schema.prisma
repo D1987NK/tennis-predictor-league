@@ -68,6 +68,10 @@ model User {
   notifications Notification[]
   auditLogs     AuditLog[]
   imports       ImportBatch[]
+  duelsChallenged Duel[]        @relation("DuelChallenger")
+  duelsOpposed    Duel[]        @relation("DuelOpponent")
+  duelsWon        Duel[]        @relation("DuelWinner")
+  duelComments    DuelComment[]
 
   @@index([totalPoints])
 }
@@ -96,6 +100,7 @@ model Match {
 
   sets        MatchSet[]
   predictions Prediction[]
+  duels       Duel[]
 
   // A scheduled match is unique by tournament + date + the two players
   @@unique([tournament, matchDate, player1, player2], name: "match_identity")
@@ -138,6 +143,56 @@ model Prediction {
 
   @@unique([userId, matchId])
   @@index([matchId])
+}
+
+enum DuelStatus {
+  PENDING // challenge sent, awaiting the opponent's response
+  ACCEPTED // opponent accepted — duel is live, comments open
+  DECLINED // opponent declined — terminal
+  CANCELLED // challenger withdrew before a response — terminal
+  COMPLETED // the underlying match finished & was scored — duel resolved
+}
+
+// A private 1-vs-1 challenge between two users predicting the same match.
+// Deliberately does NOT store its own prediction — each side's "prediction"
+// for the duel is simply their normal league Prediction row for `matchId`,
+// so duels are a social layer on top of the existing prediction/scoring
+// pipeline rather than a parallel system. Resolves automatically (winner by
+// higher pointsAwarded on that match) when results are imported.
+model Duel {
+  id            String     @id @default(cuid())
+  challengerId  String
+  challenger    User       @relation("DuelChallenger", fields: [challengerId], references: [id], onDelete: Cascade)
+  opponentId    String
+  opponent      User       @relation("DuelOpponent", fields: [opponentId], references: [id], onDelete: Cascade)
+  matchId       String
+  match         Match      @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  stake         Int        @default(0) // bragging-rights points figure shown in the UI; not deducted from totalPoints
+  status        DuelStatus @default(PENDING)
+  winnerId      String? // null until COMPLETED; also null on a draw
+  winner        User?      @relation("DuelWinner", fields: [winnerId], references: [id])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  comments DuelComment[]
+
+  @@index([challengerId])
+  @@index([opponentId])
+  @@index([matchId])
+}
+
+model DuelComment {
+  id        String    @id @default(cuid())
+  duelId    String
+  duel      Duel      @relation(fields: [duelId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   String
+  createdAt DateTime  @default(now())
+  editedAt  DateTime? // null = never edited
+  deletedAt DateTime? // soft delete — hidden from users, retained for admin moderation
+
+  @@index([duelId, createdAt])
 }
 
 model Notification {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,9 +12,11 @@ interface NotificationItem {
   body: string;
   read: boolean;
   createdAt: string;
+  meta: { duelId?: string } | null;
 }
 
 export function NotificationBell({ count }: { count: number }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unread, setUnread] = useState(count);
@@ -38,6 +41,22 @@ export function NotificationBell({ count }: { count: number }) {
     const next = !open;
     setOpen(next);
     if (next) load();
+  }
+
+  async function openNotification(n: NotificationItem) {
+    if (!n.read) {
+      await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [n.id] }),
+      });
+      setItems((prev) => prev.map((i) => (i.id === n.id ? { ...i, read: true } : i)));
+      setUnread((u) => Math.max(0, u - 1));
+    }
+    if (n.meta?.duelId) {
+      setOpen(false);
+      router.push(`/duels/${n.meta.duelId}`);
+    }
   }
 
   useEffect(() => {
@@ -73,11 +92,13 @@ export function NotificationBell({ count }: { count: number }) {
               <p className="p-4 text-center text-sm text-muted-foreground">No notifications yet.</p>
             ) : (
               items.map((n, i) => (
-                <div
+                <button
                   key={n.id}
+                  onClick={() => openNotification(n)}
                   className={cn(
-                    "animate-fade-in border-b p-3 transition-colors last:border-0 hover:bg-accent/50",
+                    "block w-full animate-fade-in border-b p-3 text-left transition-colors last:border-0 hover:bg-accent/50",
                     !n.read && "bg-primary/5",
+                    n.meta?.duelId && "cursor-pointer",
                   )}
                   style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "backwards" }}
                 >
@@ -86,7 +107,7 @@ export function NotificationBell({ count }: { count: number }) {
                   <p className="mt-1 text-[10px] text-muted-foreground">
                     {new Date(n.createdAt).toLocaleString()}
                   </p>
-                </div>
+                </button>
               ))
             )}
           </div>
