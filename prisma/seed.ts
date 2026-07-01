@@ -209,6 +209,7 @@ async function main() {
           pointsAwarded: breakdown.total,
           winnerCorrect: breakdown.winnerCorrect,
           scoreCorrect: breakdown.scoreCorrect,
+          setWinnersCorrect: breakdown.setWinnersCorrect,
           setsCorrect: breakdown.setsCorrect,
           scoredAt: new Date(),
         },

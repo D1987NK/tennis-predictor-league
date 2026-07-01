@@ -89,7 +89,8 @@ Admin → **Results** tab.
 ### 3. Upload & score
 Choose your **Results CSV** → click **Import & score**. This single action:
 - updates each match's winner, score and set scores → status *Finished*,
-- **scores every user's prediction** (winner +15, exact score +15, each exact set +10),
+- **scores every user's prediction** (winner +15, exact score +15, +10 per correct
+  set winner, +10 more per exact set score),
 - **recomputes the leaderboard / ranks**,
 - **sends each user a notification** with their points and new rank.
 

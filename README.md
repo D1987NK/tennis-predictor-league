@@ -11,8 +11,9 @@ scores, and climb an automated leaderboard. Built with **Next.js 14 (App Router)
   (USER / ADMIN), JWT sessions.
 - **Predictions** — one-at-a-time flow with progress bar; predict winner, match
   score and (optionally) per-set games. Auto-locks when a match starts.
-- **Scoring engine** — +15 winner, +15 exact match score, +10 per exact set;
-  best-of-3 (max 60) vs best-of-5 (max 80) auto-detected.
+- **Scoring engine** — +15 winner, +15 exact match score, +10 per correct set
+  winner, +10 more per exact set score (stacks to 20 for a fully-correct set);
+  best-of-3 (max 90) vs best-of-5 (max 130) auto-detected.
 - **Admin** — CSV match import (with validation + error report + publish step),
   CSV results import that auto-scores every prediction, recomputes the
   leaderboard and notifies users; users list; audit log & import history; reset.

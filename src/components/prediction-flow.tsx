@@ -233,7 +233,7 @@ export function PredictionFlow({ matches }: { matches: FlowMatch[] }) {
                 onClick={() => setShowSets((s) => !s)}
                 className="text-sm font-medium text-primary hover:underline"
               >
-                {showSets ? "Hide" : "Add"} set scores (bonus +10 each)
+                {showSets ? "Hide" : "Add"} set scores (+10 for the set winner, +10 more for the exact score)
               </button>
               {showSets && (
                 <div className="mt-3 space-y-2">

@@ -82,7 +82,8 @@ export function PredictionCard({ p }: { p: PredictionWithMatch }) {
           <div className="flex flex-wrap gap-2 text-xs">
             <Indicator ok={p.winnerCorrect} label="Winner +15" />
             <Indicator ok={p.scoreCorrect} label="Score +15" />
-            <Indicator ok={p.setsCorrect > 0} label={`Sets ${p.setsCorrect}×10`} />
+            <Indicator ok={p.setWinnersCorrect > 0} label={`Set winner ${p.setWinnersCorrect}×10`} />
+            <Indicator ok={p.setsCorrect > 0} label={`Exact set ${p.setsCorrect}×10`} />
           </div>
         )}
 

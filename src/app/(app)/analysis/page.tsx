@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseScore } from "@/lib/tennis";
+import { POINTS, POINTS_PER_SET } from "@/lib/scoring";
 import { toDateKey } from "@/lib/timezone";
 import { AnalysisCharts, type AnalysisData } from "@/components/analysis-charts";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +35,7 @@ export default async function AnalysisPage() {
   const correctWinners = preds.filter((p) => p.winnerCorrect).length;
   const correctScores = preds.filter((p) => p.scoreCorrect).length;
   const totalSetsCorrect = preds.reduce((s, p) => s + p.setsCorrect, 0);
+  const totalSetWinnersCorrect = preds.reduce((s, p) => s + p.setWinnersCorrect, 0);
   const totalPoints = preds.reduce((s, p) => s + (p.pointsAwarded ?? 0), 0);
 
   // Sets actually played (from final score) — for set accuracy & efficiency.
@@ -43,7 +45,7 @@ export default async function AnalysisPage() {
     const sc = p.match.finalScore ? parseScore(p.match.finalScore) : null;
     const played = sc ? sc.p1 + sc.p2 : 0;
     setsPlayed += played;
-    maxPoints += 15 + 15 + played * 10;
+    maxPoints += POINTS.WINNER + POINTS.SCORE + played * POINTS_PER_SET;
   }
 
   // --- Daily aggregation ---
@@ -114,9 +116,12 @@ export default async function AnalysisPage() {
         ]
       : [],
     pointsSource: [
-      { name: "Winners", value: correctWinners * 15 },
-      { name: "Match scores", value: correctScores * 15 },
-      { name: "Set scores", value: totalSetsCorrect * 10 },
+      { name: "Winners", value: correctWinners * POINTS.WINNER },
+      { name: "Match scores", value: correctScores * POINTS.SCORE },
+      {
+        name: "Set scores",
+        value: (totalSetWinnersCorrect + totalSetsCorrect) * POINTS.SET_WINNER,
+      },
     ],
     byTour,
     radar: [

@@ -127,7 +127,11 @@ model Prediction {
   pointsAwarded   Int?
   winnerCorrect   Boolean  @default(false)
   scoreCorrect    Boolean  @default(false)
-  setsCorrect     Int      @default(0)
+  // Sets where the predicted winner of that set matched (any score) — a
+  // superset of setsCorrect, since an exact score match always implies a
+  // correct set winner too.
+  setWinnersCorrect Int    @default(0)
+  setsCorrect     Int      @default(0) // sets where the exact games also matched
   scoredAt        DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
