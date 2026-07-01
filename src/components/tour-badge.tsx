@@ -24,8 +24,16 @@ export function Logo({ className }: { className?: string }) {
   );
 }
 
-/** Secondary Farsi (RTL) brand mark shown next to the logo. */
+/**
+ * Secondary Farsi (RTL) brand mark shown next to the logo. Text comes from
+ * NEXT_PUBLIC_BRAND_TAGLINE (public — this renders in client components too,
+ * so it must be NEXT_PUBLIC_ to be inlined into the browser bundle). Renders
+ * nothing if unset.
+ */
 export function BrandTagline({ className }: { className?: string }) {
+  const text = process.env.NEXT_PUBLIC_BRAND_TAGLINE;
+  if (!text) return null;
+
   return (
     <span
       dir="rtl"
@@ -35,7 +43,7 @@ export function BrandTagline({ className }: { className?: string }) {
         className,
       )}
     >
-      هیچوقت یادتون نره حمید فیفاش خوب نیست
+      {text}
     </span>
   );
 }
