@@ -51,15 +51,15 @@ export function NotificationBell({ count }: { count: number }) {
   return (
     <div className="relative" ref={ref}>
       <Button variant="ghost" size="icon" onClick={toggle} aria-label="Notifications" className="relative">
-        <Bell className="size-4" />
+        <Bell className={cn("size-4 transition-transform", unread > 0 && "animate-[wiggle_2s_ease-in-out_infinite]")} />
         {unread > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+          <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground animate-pulse">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
       </Button>
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-80 rounded-lg border bg-card shadow-lg">
+        <div className="absolute right-0 z-50 mt-2 w-80 animate-scale-in rounded-lg border bg-card shadow-lg origin-top-right">
           <div className="flex items-center justify-between border-b p-3">
             <span className="text-sm font-semibold">Notifications</span>
             {unread > 0 && (
@@ -72,13 +72,14 @@ export function NotificationBell({ count }: { count: number }) {
             {items.length === 0 ? (
               <p className="p-4 text-center text-sm text-muted-foreground">No notifications yet.</p>
             ) : (
-              items.map((n) => (
+              items.map((n, i) => (
                 <div
                   key={n.id}
                   className={cn(
-                    "border-b p-3 last:border-0",
+                    "animate-fade-in border-b p-3 transition-colors last:border-0 hover:bg-accent/50",
                     !n.read && "bg-primary/5",
                   )}
+                  style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "backwards" }}
                 >
                   <p className="text-sm font-medium">{n.title}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">{n.body}</p>

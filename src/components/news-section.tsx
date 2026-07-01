@@ -56,11 +56,12 @@ export async function NewsSection() {
             href={article.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="block rounded-lg border p-3 transition-colors hover:bg-accent"
+            className="group hover-lift block animate-fade-in rounded-lg border p-3 transition-colors hover:bg-accent hover:shadow-sm"
+            style={{ animationDelay: `${i * 70}ms`, animationFillMode: "backwards" }}
           >
             <div className="flex items-start justify-between gap-2">
               <p className="text-sm font-semibold leading-snug">{article.title}</p>
-              <ExternalLink className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+              <ExternalLink className="mt-0.5 size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
             </div>
             <p className="mt-1 text-xs text-muted-foreground">{article.summary}</p>
             <div className="mt-2 flex items-center gap-2">

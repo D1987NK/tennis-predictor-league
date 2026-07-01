@@ -63,11 +63,14 @@ export async function getDashboardData(userId: string) {
   );
   const remainingToPredict = openMatches.filter((m) => !predictedMatchIds.has(m.id)).length;
 
-  const nextMatch = todaysMatches.find((m) => m.status === "PUBLISHED") ?? null;
+  // The next match a user still needs to predict (skips ones already done).
+  const nextMatch =
+    todaysMatches.find((m) => m.status === "PUBLISHED" && !predictedMatchIds.has(m.id)) ?? null;
 
   return {
     user,
     matchesToday: todaysMatches.length,
+    openMatchesToday: openMatches.length,
     predictionsToday,
     remainingToPredict,
     nextMatch,

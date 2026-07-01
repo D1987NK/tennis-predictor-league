@@ -99,15 +99,16 @@ export default async function LeaderboardPage({
             <p className="p-8 text-center text-muted-foreground">No scored predictions yet.</p>
           )}
 
-          {rows.map((r) => {
+          {rows.map((r, i) => {
             const isMe = r.userId === session?.user.id;
             return (
               <div
                 key={r.userId}
                 className={cn(
-                  "grid grid-cols-2 items-center gap-2 border-b px-4 py-3 text-sm last:border-0 md:grid-cols-[3rem_1fr_repeat(6,5rem)]",
+                  "grid animate-fade-in grid-cols-2 items-center gap-2 border-b px-4 py-3 text-sm transition-colors last:border-0 hover:bg-accent/50 md:grid-cols-[3rem_1fr_repeat(6,5rem)]",
                   isMe && "bg-primary/5",
                 )}
+                style={{ animationDelay: `${Math.min(i, 15) * 40}ms`, animationFillMode: "backwards" }}
               >
                 <span className="font-bold">
                   {r.rank && r.rank <= 3 ? medals[r.rank - 1] : `#${r.rank}`}

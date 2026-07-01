@@ -6,10 +6,14 @@ import { scorePrediction, type SetGames } from "../src/lib/scoring";
 
 const prisma = new PrismaClient();
 
-// "Today" for the demo data. Uses the configured demo date so the seeded
-// open matches are always visible on the dashboard regardless of clock.
-const TODAY = new Date(Date.UTC(2026, 5, 29)); // 2026-06-29
-const YESTERDAY = new Date(Date.UTC(2026, 5, 28)); // 2026-06-28
+// "Today" for the demo data — always the REAL current UTC date (must match
+// what todayDate() in src/lib/queries.ts computes, or "today's" matches
+// silently vanish/mislock the moment the seed is run on a different day).
+const seedRunAt = new Date();
+const TODAY = new Date(
+  Date.UTC(seedRunAt.getUTCFullYear(), seedRunAt.getUTCMonth(), seedRunAt.getUTCDate()),
+);
+const YESTERDAY = new Date(TODAY.getTime() - 24 * 60 * 60 * 1000);
 
 interface SeedMatch {
   tournament: string;

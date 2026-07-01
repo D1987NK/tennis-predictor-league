@@ -132,10 +132,10 @@ export function PredictionFlow({ matches }: { matches: FlowMatch[] }) {
 
   if (done) {
     return (
-      <Card className="animate-fade-in">
+      <Card className="animate-scale-in">
         <CardContent className="flex flex-col items-center gap-4 p-12 text-center">
-          <PartyPopper className="size-14 text-primary" />
-          <h2 className="text-2xl font-bold">🎉 You&apos;re Done for Today!</h2>
+          <PartyPopper className="size-14 animate-bounce text-primary" />
+          <h2 className="animate-fade-in text-2xl font-bold">🎉 You&apos;re Done for Today!</h2>
           <p className="max-w-md text-muted-foreground">
             All predictions have been submitted successfully. Good luck!
           </p>
@@ -163,7 +163,7 @@ export function PredictionFlow({ matches }: { matches: FlowMatch[] }) {
         <Progress value={progress} />
       </div>
 
-      <Card className="animate-fade-in">
+      <Card key={match.id} className="animate-scale-in">
         <CardContent className="space-y-6 p-6">
           {/* Header */}
           <div className="text-center">
@@ -194,7 +194,7 @@ export function PredictionFlow({ matches }: { matches: FlowMatch[] }) {
                   className={cn(
                     "tap flex min-h-[60px] items-center justify-center rounded-xl border-2 p-4 text-center font-medium transition-all active:scale-[0.98] disabled:opacity-60",
                     winner === p
-                      ? "border-primary bg-primary/10 text-primary"
+                      ? "animate-pop border-primary bg-primary/10 text-primary"
                       : "border-border hover:border-primary/50",
                   )}
                 >
@@ -216,7 +216,7 @@ export function PredictionFlow({ matches }: { matches: FlowMatch[] }) {
                   className={cn(
                     "tap min-h-[52px] rounded-xl border-2 font-semibold transition-all active:scale-95 disabled:opacity-60",
                     score === o
-                      ? "border-primary bg-primary/10 text-primary"
+                      ? "animate-pop border-primary bg-primary/10 text-primary"
                       : "border-border hover:border-primary/50",
                   )}
                 >

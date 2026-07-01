@@ -39,7 +39,7 @@ export default async function PredictionsPage() {
           <TabsTrigger value="completed">Completed ({completed.length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="today" className="space-y-3">
+        <TabsContent value="today" className="animate-fade-in space-y-3">
           {todays.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center text-muted-foreground">
@@ -47,15 +47,19 @@ export default async function PredictionsPage() {
               </CardContent>
             </Card>
           ) : (
-            todays.map((p) => <PredictionCard key={p.id} p={p} />)
+            todays.map((p, i) => (
+              <div key={p.id} className="animate-fade-in" style={{ animationDelay: `${i * 60}ms`, animationFillMode: "backwards" }}>
+                <PredictionCard p={p} />
+              </div>
+            ))
           )}
         </TabsContent>
 
-        <TabsContent value="pending">
+        <TabsContent value="pending" className="animate-fade-in">
           <PendingPredictions predictions={pending} />
         </TabsContent>
 
-        <TabsContent value="completed" className="space-y-3">
+        <TabsContent value="completed" className="animate-fade-in space-y-3">
           {completed.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center text-muted-foreground">
@@ -63,7 +67,11 @@ export default async function PredictionsPage() {
               </CardContent>
             </Card>
           ) : (
-            completed.map((p) => <PredictionCard key={p.id} p={p} />)
+            completed.map((p, i) => (
+              <div key={p.id} className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 10) * 50}ms`, animationFillMode: "backwards" }}>
+                <PredictionCard p={p} />
+              </div>
+            ))
           )}
         </TabsContent>
       </Tabs>
