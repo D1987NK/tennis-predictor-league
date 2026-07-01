@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getDashboardData } from "@/lib/queries";
@@ -5,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TourBadge } from "@/components/tour-badge";
+import { NewsSection, NewsSectionSkeleton } from "@/components/news-section";
 import { Trophy, Target, CalendarClock, CheckCircle2, Medal, ArrowRight } from "lucide-react";
 
 function StatCard({
@@ -139,24 +141,34 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* Recent notifications */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent notifications</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {data.recentNotifications.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nothing yet.</p>
-          ) : (
-            data.recentNotifications.map((n) => (
-              <div key={n.id} className="rounded-md border p-3">
-                <p className="text-sm font-medium">{n.title}</p>
-                <p className="text-xs text-muted-foreground">{n.body}</p>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Recent notifications */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent notifications</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {data.recentNotifications.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nothing yet.</p>
+            ) : (
+              data.recentNotifications.map((n) => (
+                <div key={n.id} className="rounded-md border p-3">
+                  <p className="text-sm font-medium">{n.title}</p>
+                  <p className="text-xs text-muted-foreground">{n.body}</p>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Tennis news — streams in independently so a slow/cold fetch never
+            blocks the rest of the dashboard from rendering. */}
+        <div className="lg:col-span-2">
+          <Suspense fallback={<NewsSectionSkeleton />}>
+            <NewsSection />
+          </Suspense>
+        </div>
+      </div>
     </div>
   );
 }

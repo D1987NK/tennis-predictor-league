@@ -19,6 +19,10 @@ scores, and climb an automated leaderboard. Built with **Next.js 14 (App Router)
 - **Leaderboard** — ranks with medals, correct winners/scores/sets, accuracy,
   filters (All Time / Today / Tournament).
 - **Dashboard, My Predictions, History, Profile, Notifications.**
+- **Tennis News** (Dashboard) — top 5 current ATP/WTA headlines fetched live via
+  the Claude API (Haiku 4.5 + web search), cached in the DB for 45 minutes with a
+  manual refresh button. Requires `ANTHROPIC_API_KEY`; degrades gracefully to an
+  "unavailable" message if unset.
 - **Theme** — dark by default, light toggle, ATP blue / WTA purple / court green.
 
 ## Getting started

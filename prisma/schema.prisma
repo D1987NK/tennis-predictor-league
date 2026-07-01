@@ -30,6 +30,15 @@ model AppSetting {
   updatedAt               DateTime @updatedAt
 }
 
+// Singleton (id = 1) caching the latest tennis news fetched via the Claude API.
+// Persisted in the DB (not memory) so it survives serverless cold starts and is
+// shared across all users instead of re-fetching per request.
+model NewsCache {
+  id        Int      @id @default(1)
+  articles  Json // NewsArticle[] — see src/lib/services/news.ts
+  fetchedAt DateTime @default(now())
+}
+
 enum Tour {
   ATP
   WTA
