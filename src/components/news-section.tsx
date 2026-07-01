@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getTennisNews } from "@/lib/services/news";
 import { Newspaper, ExternalLink } from "lucide-react";
@@ -24,12 +24,17 @@ export async function NewsSection() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <Newspaper className="size-5" /> Tennis News
-        </CardTitle>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <Newspaper className="size-5" /> Tennis News
+          </CardTitle>
+          <CardDescription dir="rtl" lang="fa" className="mt-1">
+            این اخبار تنیس با هر روز آپدیت میشه و پنج خبر مهم تنیس دیروز رو نشون میده
+          </CardDescription>
+        </div>
         {news && (
-          <span className="text-xs text-muted-foreground">
+          <span className="shrink-0 text-xs text-muted-foreground">
             Updated {timeAgo(news.fetchedAt)}
             {news.stale && " (cached)"}
           </span>
