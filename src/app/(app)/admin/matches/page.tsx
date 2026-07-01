@@ -9,18 +9,24 @@ import {
   ManualMatchForm,
   PublishAllButton,
   PendingMatchRow,
+  TodayMatchTimeRow,
 } from "@/components/admin/match-admin";
 import { toDateKey } from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminMatchesPage() {
-  const todayKey = toDateKey(todayDate());
+  const today = todayDate();
+  const todayKey = toDateKey(today);
 
-  const [pending, published] = await Promise.all([
+  const [pending, todaysLive, otherPublished] = await Promise.all([
     prisma.match.findMany({ where: { status: "UPCOMING" }, orderBy: { startsAt: "asc" } }),
     prisma.match.findMany({
-      where: { status: { in: ["PUBLISHED", "LOCKED"] } },
+      where: { status: { in: ["PUBLISHED", "LOCKED"] }, matchDate: today },
+      orderBy: { startsAt: "asc" },
+    }),
+    prisma.match.findMany({
+      where: { status: { in: ["PUBLISHED", "LOCKED"] }, matchDate: { not: today } },
       orderBy: { startsAt: "asc" },
       take: 50,
     }),
@@ -79,13 +85,49 @@ export default async function AdminMatchesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Published / live ({published.length})</CardTitle>
+          <CardTitle>Today&apos;s matches ({todaysLive.length})</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {todaysLive.length === 0 ? (
+            <p className="p-6 text-center text-sm text-muted-foreground">
+              No published matches for today yet.
+            </p>
+          ) : (
+            <>
+              <p className="px-4 pt-3 text-xs text-muted-foreground">
+                Fix a wrong time here — a corrected future time automatically reopens a locked
+                match for predictions.
+              </p>
+              {todaysLive.map((m) => (
+                <TodayMatchTimeRow
+                  key={m.id}
+                  match={{
+                    id: m.id,
+                    tournament: m.tournament,
+                    tour: m.tour,
+                    round: m.round,
+                    timeBst: m.timeBst,
+                    timeAest: m.timeAest,
+                    player1: m.player1,
+                    player2: m.player2,
+                    status: m.status as "PUBLISHED" | "LOCKED",
+                  }}
+                />
+              ))}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Other published / live ({otherPublished.length})</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {published.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nothing published yet.</p>
+          {otherPublished.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nothing else published.</p>
           ) : (
-            published.map((m) => (
+            otherPublished.map((m) => (
               <div key={m.id} className="flex items-center gap-3 rounded-md border p-2 text-sm">
                 <TourBadge tour={m.tour} />
                 <span className="min-w-0 flex-1 truncate">{m.player1} vs {m.player2}</span>

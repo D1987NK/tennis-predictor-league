@@ -322,3 +322,83 @@ export function PendingMatchRow({ match }: { match: PendingMatch }) {
     </div>
   );
 }
+
+interface TodayMatch {
+  id: string;
+  tournament: string;
+  tour: "ATP" | "WTA";
+  round: string | null;
+  timeBst: string | null;
+  timeAest: string | null;
+  player1: string;
+  player2: string;
+  status: "PUBLISHED" | "LOCKED";
+}
+
+/** Editable row for a today's match that's already published/locked — lets an
+ * admin fix a wrong time and, if the corrected time is in the future, the
+ * match automatically re-opens for predictions. */
+export function TodayMatchTimeRow({ match }: { match: TodayMatch }) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [timeBst, setTimeBst] = useState(match.timeBst ?? "");
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    const res = await fetch(`/api/admin/matches/${match.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ timeBst }),
+    });
+    const data = await res.json();
+    setSaving(false);
+    if (!res.ok) return toast({ variant: "error", title: "Save failed", description: data.error });
+    setEditing(false);
+    toast({
+      variant: "success",
+      title: "Match time updated",
+      description:
+        data.match.status === "PUBLISHED"
+          ? "Match is open for predictions."
+          : "Match is locked (new time has already passed, or the daily cut-off has).",
+    });
+    router.refresh();
+  }
+
+  if (editing) {
+    return (
+      <div className="flex flex-wrap items-center gap-2 border-b p-3 text-sm last:border-0">
+        <TourBadge tour={match.tour} />
+        <span className="min-w-0 flex-1 truncate font-medium">{match.player1} vs {match.player2}</span>
+        <Input
+          value={timeBst}
+          onChange={(e) => setTimeBst(e.target.value)}
+          placeholder="HH:MM BST"
+          className="w-28"
+        />
+        <Button size="icon" variant="ghost" onClick={save} disabled={saving}>
+          <Check className="size-4 text-primary" />
+        </Button>
+        <Button size="icon" variant="ghost" onClick={() => setEditing(false)} disabled={saving}>
+          <X className="size-4" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-3 border-b p-2 text-sm last:border-0">
+      <TourBadge tour={match.tour} />
+      <span className="min-w-0 flex-1 truncate">{match.player1} vs {match.player2}</span>
+      <span className="text-xs text-muted-foreground">{match.timeAest ?? "—"} AEST</span>
+      <Badge variant={match.status === "LOCKED" ? "destructive" : "success"}>
+        {match.status === "LOCKED" ? "Locked" : "Open"}
+      </Badge>
+      <Button size="icon" variant="ghost" onClick={() => setEditing(true)}>
+        <Pencil className="size-4" />
+      </Button>
+    </div>
+  );
+}

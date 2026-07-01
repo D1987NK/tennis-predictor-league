@@ -60,6 +60,25 @@ export async function lockDueMatches(now: Date = new Date()): Promise<number> {
   return res.count;
 }
 
+/**
+ * Whether a match (given its date, start time and the current cut-off config)
+ * should currently be open (PUBLISHED) or locked. Used when an admin edits a
+ * match's time — pushing the time forward should reopen a LOCKED match if the
+ * new time is genuinely in the future, and vice versa.
+ */
+export function deriveOpenStatus(
+  startsAt: Date,
+  matchDate: Date,
+  cutoff: CutoffConfig,
+  now: Date = new Date(),
+): "PUBLISHED" | "LOCKED" {
+  if (startsAt.getTime() <= now.getTime()) return "LOCKED";
+  if (cutoff.enabled && now.getTime() >= predictionDeadline(matchDate, cutoff.minutes).getTime()) {
+    return "LOCKED";
+  }
+  return "PUBLISHED";
+}
+
 /** Matches that have been published/started but have no result yet. */
 export async function getMatchesAwaitingResults() {
   return prisma.match.findMany({
