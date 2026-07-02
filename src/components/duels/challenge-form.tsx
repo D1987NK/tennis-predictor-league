@@ -185,8 +185,9 @@ export function ChallengeForm({ matches }: { matches: ChallengeableMatch[] }) {
           </div>
         </form>
         <p className="mt-2 text-xs text-muted-foreground">
-          Stake is for bragging rights only — it&apos;s shown on the duel but isn&apos;t deducted
-          from anyone&apos;s league points.
+          Stakes are real: if the duel has a winner, the stake is transferred from the loser&apos;s
+          points to the winner&apos;s. You need enough points to cover the stake, and so does your
+          opponent before they can accept.
         </p>
       </CardContent>
     </Card>

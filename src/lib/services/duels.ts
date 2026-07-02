@@ -64,17 +64,33 @@ export async function resolveDuelsForMatch(matchId: string): Promise<number> {
     let winnerId: string | null = null;
     if (challengerPts > opponentPts) winnerId = duel.challengerId;
     else if (opponentPts > challengerPts) winnerId = duel.opponentId;
+    const loserId = winnerId === null ? null : winnerId === duel.challengerId ? duel.opponentId : duel.challengerId;
 
-    await prisma.duel.update({
-      where: { id: duel.id },
-      data: { status: "COMPLETED", winnerId },
-    });
+    await prisma.$transaction([
+      prisma.duel.update({
+        where: { id: duel.id },
+        data: { status: "COMPLETED", winnerId },
+      }),
+      ...(winnerId && loserId && duel.stake > 0
+        ? [
+            prisma.user.update({
+              where: { id: winnerId },
+              data: { stakePoints: { increment: duel.stake } },
+            }),
+            prisma.user.update({
+              where: { id: loserId },
+              data: { stakePoints: { decrement: duel.stake } },
+            }),
+          ]
+        : []),
+    ]);
 
     const matchLabel = `${duel.match.player1} vs ${duel.match.player2}`;
+    const stakeLine = winnerId && duel.stake > 0 ? ` ${duel.stake} points changed hands.` : "";
     const resultLine =
       winnerId === null
         ? `It's a draw (${challengerPts}-${opponentPts} points).`
-        : `${winnerId === duel.challengerId ? duel.challenger.username : duel.opponent.username} won ${Math.max(challengerPts, opponentPts)}-${Math.min(challengerPts, opponentPts)}.`;
+        : `${winnerId === duel.challengerId ? duel.challenger.username : duel.opponent.username} won ${Math.max(challengerPts, opponentPts)}-${Math.min(challengerPts, opponentPts)}.${stakeLine}`;
 
     await prisma.notification.createMany({
       data: [duel.challengerId, duel.opponentId].map((userId) => ({

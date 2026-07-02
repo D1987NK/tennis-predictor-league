@@ -34,6 +34,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "That match has already finished." }, { status: 409 });
   }
 
+  if (stake > 0) {
+    const challenger = await prisma.user.findUnique({ where: { id: user.id }, select: { totalPoints: true } });
+    if (!challenger || challenger.totalPoints < stake) {
+      return NextResponse.json(
+        { error: `You don't have enough points for that stake. You have ${challenger?.totalPoints ?? 0} points.` },
+        { status: 409 },
+      );
+    }
+  }
+
   const existing = await prisma.duel.findFirst({
     where: {
       matchId,

@@ -29,6 +29,16 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return NextResponse.json({ error: "This challenge has already been responded to." }, { status: 409 });
   }
 
+  if (action === "accept" && duel.stake > 0) {
+    const opponent = await prisma.user.findUnique({ where: { id: user.id }, select: { totalPoints: true } });
+    if (!opponent || opponent.totalPoints < duel.stake) {
+      return NextResponse.json(
+        { error: `You need at least ${duel.stake} points to accept this stake.` },
+        { status: 409 },
+      );
+    }
+  }
+
   const newStatus = action === "accept" ? "ACCEPTED" : "DECLINED";
   const updated = await prisma.duel.update({ where: { id: duel.id }, data: { status: newStatus } });
 
