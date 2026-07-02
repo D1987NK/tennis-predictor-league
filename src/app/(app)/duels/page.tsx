@@ -5,6 +5,7 @@ import { lockDueMatches } from "@/lib/services/matches";
 import { Card, CardContent } from "@/components/ui/card";
 import { DuelStatusBadge } from "@/components/duels/duel-status-badge";
 import { ChallengeForm, type ChallengeableMatch } from "@/components/duels/challenge-form";
+import { DuelAnimation } from "@/components/duels/duel-animation";
 import { Swords } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -105,6 +106,8 @@ export default async function DuelsPage() {
           </p>
         )}
       </div>
+
+      <DuelAnimation />
     </div>
   );
 }
