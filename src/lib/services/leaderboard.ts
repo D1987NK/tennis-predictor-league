@@ -11,6 +11,7 @@ export async function recomputeLeaderboard() {
     select: {
       id: true,
       stakePoints: true,
+      bonusPoints: true,
       predictions: {
         where: { pointsAwarded: { not: null } },
         select: { pointsAwarded: true },
@@ -20,7 +21,7 @@ export async function recomputeLeaderboard() {
 
   const totals = users.map((u) => ({
     id: u.id,
-    total: u.predictions.reduce((s, p) => s + (p.pointsAwarded ?? 0), 0) + u.stakePoints,
+    total: u.predictions.reduce((s, p) => s + (p.pointsAwarded ?? 0), 0) + u.stakePoints + u.bonusPoints,
   }));
 
   totals.sort((a, b) => b.total - a.total);
@@ -92,6 +93,7 @@ export async function getLeaderboard(filter?: {
         firstName: true,
         lastName: true,
         stakePoints: true,
+        bonusPoints: true,
         predictions: {
           where: { match: finishedMatchWhere },
           select: {
@@ -108,13 +110,16 @@ export async function getLeaderboard(filter?: {
     }),
   ]);
 
-  // Duel stakes aren't scoped to a tournament/date, so they only count toward
-  // the unfiltered (overall) view — matches recomputeLeaderboard's total.
+  // Duel stakes and admin adjustments aren't scoped to a tournament/date, so
+  // they only count toward the unfiltered (overall) view — matches
+  // recomputeLeaderboard's total.
   const includeStakes = !filter?.tournament && !filter?.dateKey;
 
   const rows: LeaderboardRow[] = users.map((u) => {
     const scored = u.predictions.filter((p) => p.pointsAwarded !== null);
-    const total = scored.reduce((s, p) => s + (p.pointsAwarded ?? 0), 0) + (includeStakes ? u.stakePoints : 0);
+    const total =
+      scored.reduce((s, p) => s + (p.pointsAwarded ?? 0), 0) +
+      (includeStakes ? u.stakePoints + u.bonusPoints : 0);
     const winners = scored.filter((p) => p.winnerCorrect).length;
     const scores = scored.filter((p) => p.scoreCorrect).length;
     const sets = scored.reduce((s, p) => s + p.setsCorrect, 0);

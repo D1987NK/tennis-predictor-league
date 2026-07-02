@@ -64,6 +64,9 @@ model User {
   // every leaderboard recompute (see leaderboard.ts), kept separate here so
   // stake transfers survive a full leaderboard rebuild from predictions.
   stakePoints  Int      @default(0)
+  // Manual admin adjustments (bonus/penalty points), folded into totalPoints
+  // the same way stakePoints is — see leaderboard.ts.
+  bonusPoints  Int      @default(0)
   rank         Int?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
