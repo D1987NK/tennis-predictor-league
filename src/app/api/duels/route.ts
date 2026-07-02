@@ -30,8 +30,11 @@ export async function POST(req: Request) {
 
   const match = await prisma.match.findUnique({ where: { id: matchId } });
   if (!match) return NextResponse.json({ error: "Match not found." }, { status: 404 });
-  if (match.status === "FINISHED") {
-    return NextResponse.json({ error: "That match has already finished." }, { status: 409 });
+  if (match.status !== "PUBLISHED") {
+    return NextResponse.json(
+      { error: "You can only challenge someone on a match that's still open for predictions." },
+      { status: 409 },
+    );
   }
 
   if (stake > 0) {

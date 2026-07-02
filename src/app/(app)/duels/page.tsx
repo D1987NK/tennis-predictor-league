@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { lockDueMatches } from "@/lib/services/matches";
 import { Card, CardContent } from "@/components/ui/card";
 import { DuelStatusBadge } from "@/components/duels/duel-status-badge";
 import { ChallengeForm, type ChallengeableMatch } from "@/components/duels/challenge-form";
@@ -11,6 +12,8 @@ export const dynamic = "force-dynamic";
 export default async function DuelsPage() {
   const session = await auth();
   const userId = session!.user.id;
+
+  await lockDueMatches();
 
   const [duels, matches] = await Promise.all([
     prisma.duel.findMany({
@@ -23,8 +26,9 @@ export default async function DuelsPage() {
       },
       orderBy: { createdAt: "desc" },
     }),
+    // Only open matches (still accepting predictions) can be challenged.
     prisma.match.findMany({
-      where: { status: { not: "FINISHED" } },
+      where: { status: "PUBLISHED" },
       orderBy: { startsAt: "asc" },
     }),
   ]);
