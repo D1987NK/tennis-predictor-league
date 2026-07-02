@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getTennisNews } from "@/lib/services/news";
+import { RefreshNewsButton } from "@/components/refresh-news-button";
 import { Newspaper, ExternalLink } from "lucide-react";
 
 function timeAgo(date: Date): string {
@@ -13,7 +14,7 @@ function timeAgo(date: Date): string {
   return `${days}d ago`;
 }
 
-export async function NewsSection() {
+export async function NewsSection({ isAdmin = false }: { isAdmin?: boolean }) {
   let news;
   let error: string | null = null;
   try {
@@ -33,12 +34,15 @@ export async function NewsSection() {
             این اخبار تنیس هر روز آپدیت میشه و پنج خبر مهم تنیس دیروز رو نشون میده
           </CardDescription>
         </div>
-        {news && (
-          <span className="shrink-0 text-xs text-muted-foreground">
-            Updated {timeAgo(news.fetchedAt)}
-            {news.stale && " (cached)"}
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-1">
+          {news && (
+            <span className="text-xs text-muted-foreground">
+              Updated {timeAgo(news.fetchedAt)}
+              {news.stale && " (cached)"}
+            </span>
+          )}
+          {isAdmin && <RefreshNewsButton />}
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {error && (

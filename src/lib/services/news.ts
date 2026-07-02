@@ -10,7 +10,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 
 const CACHE_ID = 1;
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 1 day — auto-refresh only; no manual/user-triggered refresh
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 1 day — auto-refresh, or admin-triggered via ?refresh=1
 const ARTICLE_COUNT = 5;
 
 export interface NewsArticle {
@@ -108,13 +108,15 @@ async function fetchNewsFromClaude(): Promise<NewsArticle[]> {
 }
 
 /**
- * Get tennis news, using the DB cache while it's under a day old. There is no
- * user-triggered refresh — the only way this re-fetches is automatically,
- * once the cached copy is more than CACHE_TTL_MS (1 day) old.
+ * Get tennis news, using the DB cache while it's under a day old. Regular
+ * users never trigger a re-fetch — the cache only turns over automatically
+ * once it's older than CACHE_TTL_MS (1 day). Admins can pass `force: true`
+ * to bypass the cache and re-fetch immediately (see requireAdmin gate on the
+ * API route — this function itself doesn't check roles).
  */
-export async function getTennisNews(): Promise<NewsResult> {
+export async function getTennisNews(opts?: { force?: boolean }): Promise<NewsResult> {
   const cached = await prisma.newsCache.findUnique({ where: { id: CACHE_ID } });
-  const isFresh = cached && Date.now() - cached.fetchedAt.getTime() < CACHE_TTL_MS;
+  const isFresh = !opts?.force && cached && Date.now() - cached.fetchedAt.getTime() < CACHE_TTL_MS;
 
   if (isFresh) {
     return {

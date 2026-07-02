@@ -184,7 +184,7 @@ export default async function DashboardPage() {
             blocks the rest of the dashboard from rendering. */}
         <div className="lg:col-span-2">
           <Suspense fallback={<NewsSectionSkeleton />}>
-            <NewsSection />
+            <NewsSection isAdmin={session!.user.role === "ADMIN"} />
           </Suspense>
         </div>
       </div>
