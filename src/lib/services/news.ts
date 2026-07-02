@@ -75,14 +75,22 @@ async function fetchNewsFromClaude(): Promise<NewsArticle[]> {
     messages: [
       {
         role: "user",
-        content:
+        content: (() => {
           // The model's training data doesn't tell it today's real date, so
-          // "yesterday" is anchored explicitly rather than left to guesswork.
-          `Today's date is ${new Date().toISOString().slice(0, 10)} (UTC). ` +
-          `Search the web for the ${ARTICLE_COUNT} most significant tennis news stories ` +
-          "published yesterday only (UTC or local time).\n" +
-          "Focus on ATP, WTA, or Grand Slam news including results, injuries, rankings, and tournament updates.\n" +
-          `Return exactly ${ARTICLE_COUNT} articles, each with a verified working source URL.`,
+          // the 3-day window is anchored explicitly rather than left to guesswork.
+          const today = new Date();
+          const threeDaysAgo = new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000);
+          const todayStr = today.toISOString().slice(0, 10);
+          const windowStart = threeDaysAgo.toISOString().slice(0, 10);
+          return (
+            `Today's date is ${todayStr} (UTC). ` +
+            `Search the web for the ${ARTICLE_COUNT} most significant tennis news stories ` +
+            `published within the last 3 days, from ${windowStart} to ${todayStr} (UTC or local time).\n` +
+            "Focus on ATP, WTA, or Grand Slam news including results, injuries, rankings, and tournament updates.\n" +
+            "Prefer the most recent stories within that window.\n" +
+            `Return exactly ${ARTICLE_COUNT} articles, each with a verified working source URL.`
+          );
+        })(),
       },
     ],
     output_config: {

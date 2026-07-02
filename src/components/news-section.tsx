@@ -31,7 +31,7 @@ export async function NewsSection({ isAdmin = false }: { isAdmin?: boolean }) {
             <Newspaper className="size-5" /> Tennis News
           </CardTitle>
           <CardDescription dir="rtl" lang="fa" className="mt-1">
-            این اخبار تنیس هر روز آپدیت میشه و پنج خبر مهم تنیس دیروز رو نشون میده
+            این اخبار تنیس هر روز آپدیت میشه و پنج خبر مهم تنیس سه روز اخیر رو نشون میده
           </CardDescription>
         </div>
         <div className="flex shrink-0 items-center gap-1">
